@@ -18,6 +18,7 @@ package com.pheebner.writingrecognition;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -30,6 +31,15 @@ public class GraphicsActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         mView = new MyView(this);
         setContentView(mView);
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                Network n = new Network();
+                double[] out = n.forwardPass(new double[] {1, 2, 3, 4 , 5});
+                for (int i = 0; i < out.length; i++)
+                    Log.d("OBS", "" + out[i]);
+            }
+        }).start();
     }
 
     private static final int ERASE_MENU_ID = Menu.FIRST;
