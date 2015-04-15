@@ -34,7 +34,7 @@ public class GraphicsActivity extends ActionBarActivity {
         new Thread( new Runnable() {
             @Override
             public void run() {
-                Network n = new Network();
+                Network n = new Network(5, 6, 3, 5);
                 double[] out = n.forwardPass(new double[] {1, 2, 3, 4 , 5});
                 for (int i = 0; i < out.length; i++)
                     Log.d("OBS", "" + out[i]);
