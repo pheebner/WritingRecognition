@@ -5,6 +5,8 @@ public class Network {
     private int numInputs, numHidden, numOutputs;
     private int numHiddenLayers;
 
+    double[] lastInputs;
+
     private Layer[] layers;
 
     public Network(int numInputs, int numHidden, int numHiddenLayers, int numOutputs) {
@@ -23,6 +25,7 @@ public class Network {
     }
 
     public double[] forwardPass(double[] inputs) {
+        lastInputs = inputs;
         double[] outputs = null;
 
         if (inputs.length != numInputs) {
@@ -50,11 +53,80 @@ public class Network {
                 }
 
                 netInput += -1;
-                outputs[j] = sigmoid(netInput);
+                outputs[j] = neuron.output = sigmoid(netInput);
             }
         }
 
         return outputs;
+    }
+
+    public void backPropagate(double[] desiredOutputs) {
+        if (desiredOutputs.length != numOutputs) {
+            return;
+        }
+
+        int layerIndex = layers.length - 1;
+        Layer currLayer = layers[layerIndex];
+        Layer prevLayer = layers[layerIndex - 1];
+        for (int i = 0; i < numOutputs; i++) {
+            Neuron neuron = currLayer.neurons[i];
+            neuron.error = neuron.output * (1 - neuron.output) * (desiredOutputs[i] - neuron.output);
+
+            for (int j = 0; j < prevLayer.neurons.length; j++) {
+                Neuron prevNeuron = prevLayer.neurons[j];
+
+                neuron.weights[j] = neuron.weights[j] + (neuron.error * prevNeuron.output);
+            }
+        }
+
+        Layer nextLayer;
+        layerIndex--;
+
+        while (layerIndex != 0) {
+
+            nextLayer = layers[layerIndex + 1];
+            currLayer = layers[layerIndex];
+            prevLayer = layers[layerIndex - 1];
+
+            for (int i = 0; i < numHidden; i++) {
+                Neuron neuron = currLayer.neurons[i];
+
+                double errorSummation = 0;
+                for (int j = 0; j < nextLayer.neurons.length; j++) {
+                    Neuron nextNeuron = nextLayer.neurons[j];
+                    errorSummation += nextNeuron.error * nextNeuron.weights[i];
+                }
+
+                neuron.error = neuron.output * (1 - neuron.output) * errorSummation;
+
+                for (int j = 0; j < prevLayer.neurons.length; j++) {
+                    Neuron prevNeuron = prevLayer.neurons[j];
+
+                    neuron.weights[j] = neuron.weights[j] + (neuron.error * prevNeuron.output);
+                }
+            }
+
+            layerIndex--;
+        }
+
+        nextLayer = layers[layerIndex + 1];
+        currLayer = layers[layerIndex];
+
+        for (int i = 0; i < numHidden; i++) {
+            Neuron neuron = currLayer.neurons[i];
+
+            double errorSummation = 0;
+            for (int j = 0; j < nextLayer.neurons.length; j++) {
+                Neuron nextNeuron = nextLayer.neurons[j];
+                errorSummation += nextNeuron.error * nextNeuron.weights[i];
+            }
+
+            neuron.error = neuron.output * (1 - neuron.output) * errorSummation;
+
+            for (int j = 0; j < lastInputs.length; j++) {
+                neuron.weights[j] = neuron.weights[j] + (neuron.error * lastInputs[j]);
+            }
+        }
     }
 
     public double sigmoid(double netInput) {

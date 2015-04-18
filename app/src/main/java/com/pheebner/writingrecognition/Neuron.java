@@ -9,11 +9,15 @@ public class Neuron {
 
     public int numInputs;
     public double[] weights;
+    public double output;
+    public double error;
 
     public Neuron(int numInputs) {
         this.numInputs = numInputs;
 
         weights = new double[numInputs];
+
+        output = 0;
 
         for (int i = 0; i < numInputs; i++) {
             weights[i] = Math.random() * 2.0 - 1.0;

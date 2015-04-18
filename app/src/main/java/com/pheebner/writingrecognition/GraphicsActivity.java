@@ -34,8 +34,28 @@ public class GraphicsActivity extends ActionBarActivity {
         new Thread( new Runnable() {
             @Override
             public void run() {
-                Network n = new Network(5, 6, 3, 5);
-                double[] out = n.forwardPass(new double[] {1, 2, 3, 4 , 5});
+                Network n = new Network(8, 10, 1, 10);
+                double[] in = new double[] {1, 0, 0, 0 , 0, 0, 0, 0};
+                double[] desiredOut = new double[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+                double[] in2 = new double[] {0, 0, 0, 0, 0, 0, 0, 1};
+                double[] desiredOut2 = new double[] {0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+                for (int i = 0; i < 200; i++) {
+
+                    n.forwardPass(in);
+                    n.backPropagate(desiredOut);
+
+                    n.forwardPass(in2);
+                    n.backPropagate(desiredOut2);
+                }
+
+                double[] out = n.forwardPass(in);
+
+                for (int i = 0; i < out.length; i++)
+                    Log.d("OBS", "" + out[i]);
+
+                out = n.forwardPass(in2);
+
                 for (int i = 0; i < out.length; i++)
                     Log.d("OBS", "" + out[i]);
             }
