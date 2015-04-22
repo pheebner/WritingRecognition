@@ -34,7 +34,7 @@ public class GraphicsActivity extends ActionBarActivity {
         new Thread( new Runnable() {
             @Override
             public void run() {
-                Network n = new Network(8, 10, 1, 10);
+                Network n = new Network(1, 8, 10, 1, 10);
                 double[] in = new double[] {1, 0, 0, 0 , 0, 0, 0, 0};
                 double[] desiredOut = new double[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 

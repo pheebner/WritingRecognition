@@ -5,8 +5,11 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+
+import java.util.ArrayList;
 
 /**
 * Created by pjhee_000 on 3/29/2015.
@@ -18,6 +21,10 @@ public class MyView extends View {
     private Path mPath;
     private Paint mPaint;
     private Paint mBitmapPaint;
+
+    private ArrayList<Path> paths;
+    private Handler handler;
+    private Runnable r;
 
     public MyView(Context c) {
         super(c);
@@ -32,6 +39,10 @@ public class MyView extends View {
         mPaint.setStrokeWidth(12);
 
         mPath = new Path();
+        handler = new Handler();
+        paths = new ArrayList<>();
+        paths.ensureCapacity(5);
+
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
     }
 
@@ -40,12 +51,15 @@ public class MyView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
+        if (r != null)
+            handler.removeCallbacks(r);
     }
 
     public void resetCanvas() {
         mBitmap = Bitmap.createBitmap(mBitmap.getWidth(), mBitmap.getHeight(), Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
         mPath.reset();
+        paths.clear();
         invalidate();
     }
 
@@ -81,7 +95,8 @@ public class MyView extends View {
         // commit the path to our offscreen
         mCanvas.drawPath(mPath, mPaint);
         // kill this so we don't double draw
-        mPath.reset();
+        paths.add(mPath);
+        mPath = new Path();
     }
 
     @Override
