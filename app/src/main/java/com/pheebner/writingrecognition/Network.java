@@ -129,6 +129,11 @@ public class Network {
         }
     }
 
+    public void train(double[] inputs, double[] outputs) {
+        forwardPass(inputs);
+        backPropagate(outputs);
+    }
+
     public double sigmoid(double netInput) {
         return (1 / (1 + Math.exp(-netInput)));
     }

@@ -6,15 +6,19 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.os.Handler;
+import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-import java.util.ArrayList;
+import java.util.Objects;
 
 /**
 * Created by pjhee_000 on 3/29/2015.
 */
 public class MyView extends View {
+
+    private static int SUBMIT_MILLIS = 2000;
 
     private Bitmap mBitmap;
     private Canvas mCanvas;
@@ -22,9 +26,25 @@ public class MyView extends View {
     private Paint mPaint;
     private Paint mBitmapPaint;
 
-    private ArrayList<Path> paths;
     private Handler handler;
     private Runnable r;
+
+    private CoordList list;
+
+    private class SubmitRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            int[] xCoords = new int[20];
+            int[] yCoords = new int[20];
+
+            list.standardize(xCoords, yCoords);
+
+            resetCanvas();
+
+            ((GraphicsActivity) getContext()).onSubmission(xCoords, yCoords);
+        }
+    }
 
     public MyView(Context c) {
         super(c);
@@ -38,12 +58,17 @@ public class MyView extends View {
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(12);
 
+        list = new CoordList();
+
         mPath = new Path();
         handler = new Handler();
-        paths = new ArrayList<>();
-        paths.ensureCapacity(5);
+        r = new SubmitRunnable();
 
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
+    }
+
+    public MyView(Context c, AttributeSet a) {
+        this(c);
     }
 
     @Override
@@ -51,16 +76,22 @@ public class MyView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
-        if (r != null)
-            handler.removeCallbacks(r);
+        mPath = new Path();
+        resetList();
     }
 
     public void resetCanvas() {
         mBitmap = Bitmap.createBitmap(mBitmap.getWidth(), mBitmap.getHeight(), Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
-        mPath.reset();
-        paths.clear();
+        mPath = new Path();
+        resetList();
+
         invalidate();
+    }
+
+    public void resetList() {
+        handler.removeCallbacks(r);
+        list.init();
     }
 
     @Override
@@ -76,6 +107,8 @@ public class MyView extends View {
     private static final float TOUCH_TOLERANCE = 4;
 
     private void onTouchStart(float x, float y) {
+        handler.removeCallbacks(r);
+
         mPath.reset();
         mPath.moveTo(x, y);
         mX = x;
@@ -86,17 +119,19 @@ public class MyView extends View {
         float dy = Math.abs(y - mY);
         if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
             mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
+            list.addCoords(x, y);
             mX = x;
             mY = y;
         }
     }
     private void onTouchUp() {
         mPath.lineTo(mX, mY);
+        list.addCoords(mX, mY);
         // commit the path to our offscreen
         mCanvas.drawPath(mPath, mPaint);
         // kill this so we don't double draw
-        paths.add(mPath);
-        mPath = new Path();
+
+        handler.postDelayed(r, SUBMIT_MILLIS);
     }
 
     @Override
